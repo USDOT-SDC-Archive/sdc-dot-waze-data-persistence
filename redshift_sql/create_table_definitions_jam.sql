@@ -3,7 +3,7 @@
 -----------------------------------------------------------------------
 create schema IF NOT EXISTS dw_waze;
 DROP TABLE IF  EXISTS dw_waze.stage_jam_{{ batchIdValue }} ;
-CREATE TABLE IF NOT EXISTS dw_waze.stage_jam_{{ batchIdValue }} 
+CREATE TABLE IF NOT EXISTS dw_waze.stage_jam_{{ batchIdValue }}
 (
   id                    VARCHAR(50) ENCODE zstd,
   jam_uuid              VARCHAR(50) ENCODE zstd,
@@ -33,7 +33,7 @@ DISTSTYLE KEY DISTKEY (id) SORTKEY (pub_utc_timestamp);
 --Jam Table
 --------------------------------------------------------------------
 --DROP TABLE IF EXISTS dw_waze.jam;
-CREATE TABLE IF NOT EXISTS dw_waze.jam 
+CREATE TABLE IF NOT EXISTS dw_waze.jam
 ( id                    VARCHAR(50) ENCODE zstd,
   jam_uuid              VARCHAR(50) ENCODE zstd,
   jam_type              VARCHAR(10) ENCODE zstd,

@@ -32,7 +32,7 @@ INSERT INTO etl_waze.elt_run_stats
 SELECT etl_run_id,
        (select table_id from etl_waze.DW_TBL_INFO where TABLE_NAME ilike 'alert') table_id,
        SUM(1) TOTAL_ROWS_INGESTED,
-       COUNT(DISTINCT alert_uuid || alert_type || num_thumbsup || reliability || confidence || report_rating || location_lat || location_lon || pub_millis||pub_utc_timestamp) TOTAL_DISTINCT,
+       COUNT(DISTINCT alert_uuid || alert_type || num_thumbsup || reliability || confidence || report_rating || location_lat || location_lon || pub_millis||pub_utc_timestamp||state) TOTAL_DISTINCT,
        getdate() ELT_START_TIME,
        getdate() ELT_END_TIME
        FROM dw_waze.stage_alert_{{ batchIdValue }} sa
@@ -48,7 +48,4 @@ FROM dw_waze.stage_alert_{{ batchIdValue }} sa
 GROUP BY etl_run_id,
 state;
 
-drop table IF EXISTS dw_waze.stage_alert_{{ batchIdValue }};
-drop table IF EXISTS dw_waze.int_alert_{{ batchIdValue }};
-drop table IF EXISTS dw_waze.revised_alert_{{ batchIdValue }};
 commit;

@@ -5,7 +5,7 @@ update dw_waze.stage_jam_{{ batchIdValue }}  set etl_run_id={{ batchIdValue }} ;
 -------------------------------------------------
 --ETL Load
 -------------------------------------------------
-INSERT INTO dw_waze.jam_proto
+INSERT INTO dw_waze.jam
 select dsj.id,
        dsj.jam_uuid,
        dsj.jam_type,
@@ -26,7 +26,7 @@ select dsj.id,
        dsj.pub_millis,
        dsj.pub_utc_timestamp,
        dsj.pub_utc_epoch_week,
-       dsj.jam_md5    
+       dsj.jam_md5
 from
 (SELECT id,
        jam_uuid,
@@ -50,7 +50,7 @@ from
        pub_utc_epoch_week,
         md5(COALESCE(id,'') ||
         COALESCE(jam_type,'') ||
-       COALESCE(road_type,'') || 
+       COALESCE(road_type,'') ||
         COALESCE(state,'') ||
         COALESCE(country,'') ||
         COALESCE(speed,'') ||
@@ -63,7 +63,7 @@ from
         COALESCE(turn_type,'') ||
         COALESCE(blocking_alert_uuid,'') ||
         COALESCE(pub_millis,'') ) jam_md5
-FROM dw_waze.stage_jam_{{ batchIdValue }} 
+FROM dw_waze.stage_jam_{{ batchIdValue }}
 GROUP BY id,
        jam_uuid,
        jam_type,

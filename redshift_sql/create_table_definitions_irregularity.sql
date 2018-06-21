@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS dw_waze.stage_irregularity_{{ batchIdValue }}
 DISTSTYLE KEY DISTKEY (id) SORTKEY (detection_utc_timestamp);
 
 
-CREATE TABLE IF NOT EXISTS dw_waze.irregularity 
+CREATE TABLE IF NOT EXISTS dw_waze.irregularity
 (
   id                         VARCHAR(50) ENCODE zstd,
   irregularity_type          VARCHAR(25) ENCODE zstd,
@@ -68,7 +68,8 @@ CREATE TABLE IF NOT EXISTS dw_waze.irregularity
   update_date                VARCHAR(50) ENCODE zstd,
   update_millis              VARCHAR(50) ENCODE zstd,
   update_utc_timestamp       TIMESTAMP WITHOUT TIME ZONE ENCODE delta32k,
-  update_utc_epoch_week      SMALLINT ENCODE zstd
+  update_utc_epoch_week      SMALLINT ENCODE zstd,
+  irregularity_md5           VARCHAR(100) ENCODE zstd
 )
 DISTSTYLE KEY DISTKEY (id) SORTKEY (detection_utc_timestamp);
 
