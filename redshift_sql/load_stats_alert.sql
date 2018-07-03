@@ -48,4 +48,10 @@ FROM dw_waze.stage_alert_{{ batchIdValue }} sa
 GROUP BY etl_run_id,
 state;
 
+Drop table if exists dw_waze.int_alert_{{ batchIdValue }};
+Drop table if exists dw_waze.stage_alert_{{ batchIdValue }};
+Drop table if exists dw_waze.revised_alert_{{ batchIdValue }};
+
 commit;
+
+vacuum dw_waze.alert;

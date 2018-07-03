@@ -9,12 +9,10 @@ analyze dw_waze.stage_alert_{{ batchIdValue }};
 
 INSERT INTO dw_waze.int_alert_{{ batchIdValue }}
 WITH stg_trnsform
-     AS (SELECT *
+     AS (SELECT st.*,cnt.total_counts
          FROM   (SELECT tfi.alert_uuid,
                         tfi.alert_type,
-                        Count(*)
-over (
-PARTITION BY tfi.alert_uuid, tfi.alert_type, tfi.num_thumbsup, tfi.reliability, tfi.confidence, tfi.report_rating, tfi.location_lat, tfi.location_lon, tfi.pub_millis, tfi.pub_utc_timestamp, tfi.state,Coalesce(tfi.report_description,''),Coalesce(tfi.road_type,''),Coalesce(tfi.city,''),Coalesce(tfi.road_type,''),Coalesce(tfi.magvar,''),Coalesce(tfi.sub_type,''),Coalesce(tfi.street,''),Coalesce(tfi.jam_uuid,'')) total_counts,
+
 Crc32(tfi.alert_uuid
       || tfi.alert_type
       || tfi.num_thumbsup
@@ -138,44 +136,88 @@ CASE
                  PARTITION BY tfi.alert_uuid) < Min(dwai.start_pub_millis::BIGINT)
                                                   over (
                                                     PARTITION BY
-           tfi.alert_uuid)  ) THEN 1
+           tfi.alert_uuid) ) THEN 1
   ELSE 0
 END
                 revision_flag
- FROM   dw_waze.stage_alert_{{ batchIdValue }} tfi
+ FROM   dw_waze.stage_alert_{{ batchIdValue }}   tfi
         left join dw_waze.alert dwai
                ON dwai.alert_uuid = tfi.alert_uuid
-               )
- GROUP  BY revision_flag,
-           final_start_pub_utc_timestamp,
-           final_start_pub_millis,
-           alert_start_pub_stamp,
-           alert_uuid,
-           alert_type,
-           total_counts,
-           alert_char_crc,
-           sub_type,
-           street,
-           city,
-           state,
-           jam_uuid,
-           country,
-           num_thumbsup,
-           reliability,
-           confidence,
-           report_rating,
-           magvar,
-           report_description,
-           location_lat,
-           location_lon,
-           pub_millis,
-           pub_utc_timestamp,
-           pub_utc_epoch_week,
-           road_type,
-           etl_run_id,
-           min_tf_millis,
-           min_tf_timestamp,
-           alert_start_millis),
+               ) st
+               join
+               (
+               select alert_uuid,
+               Crc32(tfi.alert_uuid
+              || tfi.alert_type
+              || tfi.num_thumbsup
+              || tfi.reliability
+              || tfi.confidence
+              || tfi.report_rating
+              || tfi.location_lat
+              || tfi.location_lon
+              || tfi.pub_millis
+              || tfi.pub_utc_timestamp
+              || tfi.state
+              ||Coalesce(tfi.report_description,'')
+              ||Coalesce(tfi.road_type,'')
+              ||Coalesce(tfi.city,'')
+              ||Coalesce(tfi.road_type,'')
+              ||Coalesce(tfi.magvar,'')
+              ||Coalesce(tfi.sub_type,'')
+              ||Coalesce(tfi.street,'')
+              ||Coalesce(tfi.jam_uuid,'')
+              ) alert_char_crc,
+              count(*) total_counts
+              from  dw_waze.stage_alert_{{ batchIdValue }}  tfi
+              GROUP BY tfi.alert_uuid
+                      ,tfi.alert_type
+                      ,tfi.num_thumbsup
+                      ,tfi.reliability
+                      ,tfi.confidence
+                      ,tfi.report_rating
+                      ,tfi.location_lat
+                      ,tfi.location_lon
+                      ,tfi.pub_millis
+                      ,tfi.pub_utc_timestamp
+                      ,tfi.state
+                      ,tfi.report_description
+                      ,tfi.road_type
+                      ,tfi.city
+                      ,tfi.road_type
+                      ,tfi.magvar
+                      ,tfi.sub_type
+                      ,tfi.street
+                      ,tfi.jam_uuid) cnt on cnt.alert_uuid=st.alert_uuid AND cnt.alert_char_crc=st.alert_char_crc
+ GROUP  BY st.revision_flag,
+           st.final_start_pub_utc_timestamp,
+           st.final_start_pub_millis,
+           st.alert_start_pub_stamp,
+           st.alert_uuid,
+           st.alert_type,
+           cnt.total_counts,
+           st.sub_type,
+           st.street,
+           st.city,
+           st.state,
+           st.jam_uuid,
+           st.country,
+           st.num_thumbsup,
+           st.reliability,
+           st.confidence,
+           st.report_rating,
+           st.magvar,
+           st.report_description,
+           st.location_lat,
+           st.location_lon,
+           st.pub_millis,
+           st.pub_utc_timestamp,
+           st.pub_utc_epoch_week,
+           st.road_type,
+           st.etl_run_id,
+           st.min_tf_millis,
+           st.min_tf_timestamp,
+           st.alert_start_millis,
+           st.alert_char_crc),
      transformed
      AS (SELECT CASE
                   WHEN fa.alert_uuid IS NULL
@@ -213,29 +255,19 @@ END
                 left join etl_waze.elt_run_stats ers
                        ON ers.etl_run_id = stg_trnsform.etl_run_id
                        AND ers.table_id =1001
-                       )
+                       ),
+final_alert as (
 SELECT tf.alert_char_crc,
        tf.alert_uuid,
        CASE
-         WHEN tf.operation = 'I'
-              AND Coalesce((SELECT Max(uuid_version)
+         WHEN tf.operation = 'I'  THEN
+         Coalesce((SELECT Max(uuid_version)
                             FROM   dw_waze.alert
                             WHERE  alert_uuid = tf.alert_uuid
-                            GROUP  BY alert_uuid), 0) > 0 THEN
-         tf.uuid_version - (SELECT Count(alert_uuid)
-                            FROM   transformed ta
-                            WHERE  ta.alert_uuid = tf.alert_uuid
-                                   AND tf.operation = 'U') - 1
-         WHEN tf.operation = 'I'
-              AND Coalesce((SELECT Max(uuid_version)
-                            FROM   dw_waze.alert
-                            WHERE  alert_uuid = tf.alert_uuid
-                            GROUP  BY alert_uuid), 0) = 0 THEN
-         tf.uuid_version - (SELECT Count(alert_uuid)
-                            FROM   transformed ta
-                            WHERE  ta.alert_uuid = tf.alert_uuid
-                                   AND tf.operation = 'U')
-         ELSE tf.uuid_version
+                            GROUP  BY alert_uuid), 0) + ROW_NUMBER() over (partition by tf.alert_uuid,load_operation order by pub_utc_timestamp, alert_char_crc)
+
+         WHEN tf.operation = 'U' THEN
+         tf.uuid_version
        END
        uuid_version,
        tf.etl_run_id,
@@ -265,31 +297,50 @@ SELECT tf.alert_char_crc,
        tf.total_counts,
        tf.operation                                                         AS
        load_operation,
-       CASE
-         WHEN Max(CASE
-                    WHEN tf.operation = 'I' THEN tf.uuid_version - 1
-                    ELSE tf.uuid_version
-                  END)
-                over (
-                  PARTITION BY tf.alert_uuid) = CASE
-                                                  WHEN tf.operation = 'I' THEN
-                                                  tf.uuid_version - 1
-                                                  ELSE tf.uuid_version
-                                                END THEN 1
-         ELSE 0
-       END
-       current_flag,
        tf.revision_flag
 FROM   transformed tf
        left join etl_waze.elt_run_stats ers
               ON ers.etl_run_id = tf.etl_run_id
-              AND ers.table_id=1001
-               ;
+              AND ers.table_id=1001)
+select fa.alert_char_crc,
+       fa.alert_uuid,
+       fa.uuid_version,
+       fa.etl_run_id,
+       fa.alert_type,
+       fa.sub_type,
+       fa.street,
+       fa.city,
+       fa.state,
+       fa.country,
+       fa.num_thumbsup,
+       fa.reliability,
+       fa.confidence,
+       fa.report_rating,
+       fa.magvar,
+       fa.report_description,
+       fa.location_lat,
+       fa.location_lon,
+       fa.jam_uuid,
+       fa.start_pub_millis,
+       fa.start_pub_utc_timestamp,
+       fa.pub_millis,
+       fa.pub_utc_timestamp,
+       fa.pub_utc_epoch_week,
+       fa.road_type,
+       fa.total_counts,
+       fa.load_operation,
+       case
+       when load_operation='I' and max(fa.uuid_version) over (partition by fa.alert_uuid) =uuid_version THEN 1
+      when load_operation='U' and max(fa.uuid_version) over (partition by fa.alert_uuid)=uuid_version and uuid_version=(select max(uuid_version) from dw_waze.alert da where da.alert_uuid=fa.alert_uuid)  THEN 1
+       ELSE 0
+        END current_flag,
+       revision_flag from final_alert fa;
+
 ------------------------------------------------------------------------------------------------------
 -- Update ETL current flag if there is new identical record of the alert comming in a different batch
 ------------------------------------------------------------------------------------------------------
 
-UPDATE dw_waze.alert
+/*UPDATE dw_waze.alert
    SET etl_current_flag = 0
 FROM dw_waze.int_alert_{{ batchIdValue }} ifa
 WHERE dw_waze.alert.alert_uuid = ifa.alert_uuid
@@ -297,20 +348,20 @@ AND   dw_waze.alert.alert_char_crc = ifa.alert_char_crc
 AND   dw_waze.alert.uuid_version = ifa.uuid_version
 AND   dw_waze.alert.etl_run_id <> ifa.etl_run_id
 AND (revision_flag=0 or load_operation ilike 'u');
-commit;
+commit;*/
 
 -----------------------------------------------------------------------------------------------------
 --Update current_flags if there is a new version of Alert
 -----------------------------------------------------------------------------------------------------
 
-UPDATE dw_waze.alert
+UPDATE dw_waze.alert 
    SET current_flag = 0 from (SELECT MIN(uuid_version) min_version,
                                      alert_uuid
-                              FROM dw_waze.int_alert_{{ batchIdValue }}
+                              FROM dw_waze.int_alert_{{ batchIdValue }} 
                               where load_operation='I'
                               and revision_flag=0
                               GROUP BY alert_uuid) ifa WHERE dw_waze.alert.alert_uuid = ifa.alert_uuid
-AND dw_waze.alert.uuid_version < ifa.min_version;
+AND dw_waze.alert.uuid_version = ifa.min_version-1;
 
 -----------------------------------------------------------------------------------------------------
 --Temporarily stage revisions in revised_alert table
@@ -483,7 +534,7 @@ SELECT alert_char_crc,
              pub_millis,
              pub_utc_timestamp,
              pub_utc_epoch_week,
-             road_type from dw_waze.revised_alert_{{ batchIdValue }};
+             road_type from dw_waze.revised_alert_{{ batchIdValue }} order by pub_utc_timestamp;
 
 ---------------------------------------------------------------------------------------------
 --Load transformed Intermediate table to alert table
