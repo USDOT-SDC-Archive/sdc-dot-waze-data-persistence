@@ -1,56 +1,75 @@
 
 --DROP TABLE IF EXISTS etl_waze.elt_run_stats; -- This line needs to be commented out in PROD
-CREATE TABLE IF NOT EXISTS etl_waze.elt_run_stats
+CREATE TABLE IF NOT EXISTS elt_waze.elt_run_stats
 (
-  ETL_RUN_ID VARCHAR(50) ENCODE lzo,
-  TABLE_ID    SMALLINT ENCODE lzo,
-  TOTAL_ROWS_INGESTED           INT ENCODE lzo,
-  TOTAL_DISTINCT           INT ENCODE lzo,
-  ELT_START_TIME  TIMESTAMP WITHOUT TIME ZONE ENCODE lzo,
-  ELT_END_TIME    TIMESTAMP WITHOUT TIME ZONE ENCODE lzo
+  ETL_RUN_ID VARCHAR(50) ENCODE zstd,
+  TABLE_ID    SMALLINT ENCODE zstd,
+  TABLE_NAME VARCHAR(50) ENCODE zstd,
+  INGESTED_ROWS           INT ENCODE zstd,
+  PERSISTED_ROWS           INT ENCODE zstd,
+  ELT_START_TIME  TIMESTAMP WITHOUT TIME ZONE ENCODE delta32k,
+  ELT_END_TIME    TIMESTAMP WITHOUT TIME ZONE ENCODE delta32k
   )
 DISTSTYLE ALL
 SORTKEY ( ETL_RUN_ID );
 
 
 --DROP TABLE IF EXISTS etl_waze.elt_run_state_stats; -- This line needs to be commented out in PROD
-CREATE TABLE IF NOT EXISTS etl_waze.elt_run_state_stats
-( ETL_RUN_ID VARCHAR(50) ENCODE lzo,
-  TABLE_ID SMALLINT ENCODE lzo,
-  STATE VARCHAR(10) ENCODE lzo,
-  TOTAL_ROWS_INGESTED           INT ENCODE lzo,
-  TOTAL_DISTINCT           INT ENCODE lzo,
-  ELT_START_TIME  TIMESTAMP WITHOUT TIME ZONE ENCODE lzo,
-  ELT_END_TIME    TIMESTAMP WITHOUT TIME ZONE ENCODE lzo
+CREATE TABLE IF NOT EXISTS elt_waze.elt_run_state_stats
+( ETL_RUN_ID VARCHAR(50) ENCODE zstd,
+  TABLE_ID SMALLINT ENCODE zstd,
+  TABLE_NAME VARCHAR(50) ENCODE zstd,
+  STATE VARCHAR(10) ENCODE zstd,
+  INGESTED_ROWS           INT ENCODE zstd,
+  PERSISTED_ROWS           INT ENCODE zstd,
+  ELT_START_TIME  TIMESTAMP WITHOUT TIME ZONE ENCODE delta32k,
+  ELT_END_TIME    TIMESTAMP WITHOUT TIME ZONE ENCODE delta32k
   )
 DISTSTYLE ALL
 SORTKEY ( ETL_RUN_ID );
-COMMIT;
 
 
 INSERT INTO etl_waze.elt_run_stats
-SELECT etl_run_id,
+SELECT stg.etl_run_id,
        (select table_id from etl_waze.DW_TBL_INFO where TABLE_NAME ilike 'alert') table_id,
-       SUM(1) TOTAL_ROWS_INGESTED,
-       COUNT(DISTINCT alert_uuid || alert_type || num_thumbsup || reliability || confidence || report_rating || location_lat || location_lon || pub_millis||pub_utc_timestamp||state) TOTAL_DISTINCT,
-       getdate() ELT_START_TIME,
-       getdate() ELT_END_TIME
-       FROM dw_waze.stage_alert_{{ batchIdValue }} sa
-GROUP BY etl_run_id;
+       'alert' AS TABLE_NAME,
+       stg.ingested_rows, 
+       prs.persisted_rows 
+FROM   (SELECT etl_run_id, 
+               Count(*) INGESTED_ROWS 
+        FROM   dw_waze.stage_alert_{{ batchIdValue }} tfi 
+        GROUP  BY etl_run_id) stg 
+       JOIN (SELECT etl_run_id, 
+                    Count(*) PERSISTED_ROWS 
+             FROM   dw_waze.int_alert_{{ batchIdValue }} tfi 
+             GROUP  BY etl_run_id) prs 
+         ON stg.etl_run_id = prs.etl_run_id ;
 
 INSERT INTO etl_waze.elt_run_state_stats
-SELECT etl_run_id,
+SELECT stg.etl_run_id, 
        (select table_id from etl_waze.DW_TBL_INFO where TABLE_NAME ilike 'alert') table_id,
-       State,
-       COUNT(1) TOTAL_ROWS_INGESTED,
-       COUNT(DISTINCT alert_uuid || alert_type || num_thumbsup || reliability || confidence || report_rating || location_lat || location_lon || pub_millis||pub_utc_timestamp) TOTAL_DISTINCT
-FROM dw_waze.stage_alert_{{ batchIdValue }} sa
-GROUP BY etl_run_id,
-state;
+       'alert' AS TABLE_NAME,
+       stg.state, 
+       stg.ingested_rows, 
+       prs.persisted_rows 
+FROM   (SELECT etl_run_id, 
+               state, 
+               Count(*) INGESTED_ROWS 
+        FROM   dw_waze.stage_alert_{{ batchIdValue }} tfi 
+        GROUP  BY etl_run_id, 
+                  state) stg 
+       JOIN (SELECT etl_run_id, 
+                    state, 
+                    Count(*) PERSISTED_ROWS 
+             FROM   dw_waze.int_alert_{{ batchIdValue }} tfi 
+             GROUP  BY etl_run_id, 
+                       state) prs 
+         ON stg.etl_run_id = prs.etl_run_id 
+            AND stg.state = prs.state ;
 
-Drop table if exists dw_waze.int_alert_{{ batchIdValue }};
-Drop table if exists dw_waze.stage_alert_{{ batchIdValue }};
-Drop table if exists dw_waze.revised_alert_{{ batchIdValue }};
+DROP TABLE if exists dw_waze.int_alert_{{ batchIdValue }};
+DROP TABLE if exists dw_waze.stage_alert_{{ batchIdValue }};
+DROP TABLE if exists dw_waze.revised_alert_{{ batchIdValue }};
 
 commit;
 

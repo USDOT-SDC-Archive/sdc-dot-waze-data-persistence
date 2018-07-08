@@ -24,10 +24,10 @@ CREATE TABLE IF NOT EXISTS dw_waze.stage_alert_{{ batchIdValue }}
   location_lon         VARCHAR(50) ENCODE zstd,
   jam_uuid             VARCHAR(100) ENCODE zstd,
   pub_millis           VARCHAR(50) ENCODE zstd,
-  pub_utc_timestamp    TIMESTAMP WITHOUT TIME ZONE ENCODE zstd,
+  pub_utc_timestamp    TIMESTAMP WITHOUT TIME ZONE ENCODE delta32k,
   pub_utc_epoch_week   SMALLINT ENCODE zstd,
   road_type            VARCHAR(25) ENCODE zstd,
-  etl_run_id           VARCHAR(50)
+  elt_run_id           VARCHAR(50)
 
 )
 DISTSTYLE KEY DISTKEY (alert_uuid);
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS dw_waze.int_alert_{{ batchIdValue }}
   alert_char_crc VARCHAR(10) ENCODE zstd,
   alert_uuid           VARCHAR(50) ENCODE zstd,
   uuid_version         SMALLINT ENCODE zstd,
-  etl_run_id           VARCHAR(50) ENCODE zstd,
+  elt_run_id           VARCHAR(50) ENCODE zstd,
   alert_type           VARCHAR(25) ENCODE zstd,
   sub_type             VARCHAR(70) ENCODE zstd,
   street               VARCHAR(100) ENCODE zstd,
@@ -57,9 +57,9 @@ CREATE TABLE IF NOT EXISTS dw_waze.int_alert_{{ batchIdValue }}
   location_lon         VARCHAR(50) ENCODE zstd,
   jam_uuid             VARCHAR(100) ENCODE zstd,
   start_pub_millis           VARCHAR(50) ENCODE zstd,
-  start_pub_utc_timestamp    TIMESTAMP WITHOUT TIME ZONE ENCODE zstd,
+  start_pub_utc_timestamp    TIMESTAMP WITHOUT TIME ZONE ENCODE delta32k,
   pub_millis           VARCHAR(50) ENCODE zstd,
-  pub_utc_timestamp    TIMESTAMP WITHOUT TIME ZONE ENCODE zstd,
+  pub_utc_timestamp    TIMESTAMP WITHOUT TIME ZONE ENCODE delta32k,
   pub_utc_epoch_week   SMALLINT ENCODE zstd,
   road_type            VARCHAR(25) ENCODE zstd,
   total_occurences    INT ENCODE zstd,
@@ -80,9 +80,9 @@ CREATE TABLE IF NOT EXISTS dw_waze.revised_alert_{{ batchIdValue }}
   alert_uuid           VARCHAR(50) ENCODE zstd,
   uuid_version         SMALLINT ENCODE zstd,
   current_flag         SMALLINT ENCODE zstd,
-  etl_run_id           VARCHAR(50) ENCODE zstd,
-  etl_current_flag     SMALLINT ENCODE zstd,
-  total_occurences         SMALLINT ENCODE zstd,
+  elt_run_id           VARCHAR(50) ENCODE zstd,
+  elt_current_flag     SMALLINT ENCODE zstd,
+  total_occurences     SMALLINT ENCODE zstd,
   alert_type           VARCHAR(25) ENCODE zstd,
   sub_type             VARCHAR(70) ENCODE zstd,
   street               VARCHAR(100) ENCODE zstd,
@@ -99,9 +99,9 @@ CREATE TABLE IF NOT EXISTS dw_waze.revised_alert_{{ batchIdValue }}
   location_lon         VARCHAR(50) ENCODE zstd,
   jam_uuid             VARCHAR(100) ENCODE zstd,
   start_pub_millis           VARCHAR(50) ENCODE zstd,
-  start_pub_utc_timestamp    TIMESTAMP WITHOUT TIME ZONE ENCODE zstd,
+  start_pub_utc_timestamp    TIMESTAMP WITHOUT TIME ZONE ENCODE delta32k,
   pub_millis           VARCHAR(50) ENCODE zstd,
-  pub_utc_timestamp    TIMESTAMP WITHOUT TIME ZONE ENCODE zstd,
+  pub_utc_timestamp    TIMESTAMP WITHOUT TIME ZONE ENCODE delta32k,
   pub_utc_epoch_week   SMALLINT ENCODE zstd,
   road_type            VARCHAR(25) ENCODE zstd
 
@@ -119,7 +119,7 @@ CREATE TABLE IF NOT EXISTS dw_waze.alert
   alert_uuid           VARCHAR(50) ENCODE zstd,
   uuid_version         SMALLINT ENCODE zstd,
   current_flag         SMALLINT ENCODE zstd,
-  etl_run_id           VARCHAR(50) ENCODE zstd,
+  elt_run_id           VARCHAR(50) ENCODE zstd,
   total_occurences         SMALLINT ENCODE zstd,
   alert_type           VARCHAR(25) ENCODE zstd,
   sub_type             VARCHAR(70) ENCODE zstd,
@@ -137,9 +137,9 @@ CREATE TABLE IF NOT EXISTS dw_waze.alert
   location_lon         VARCHAR(50) ENCODE zstd,
   jam_uuid             VARCHAR(100) ENCODE zstd,
   start_pub_millis           VARCHAR(50) ENCODE zstd,
-  start_pub_utc_timestamp    TIMESTAMP WITHOUT TIME ZONE ENCODE zstd,
+  start_pub_utc_timestamp    TIMESTAMP WITHOUT TIME ZONE ENCODE delta32k,
   pub_millis           VARCHAR(50) ENCODE zstd,
-  pub_utc_timestamp    TIMESTAMP WITHOUT TIME ZONE ENCODE zstd,
+  pub_utc_timestamp    TIMESTAMP WITHOUT TIME ZONE ENCODE delta32k,
   pub_utc_epoch_week   SMALLINT ENCODE zstd,
   road_type            VARCHAR(25) ENCODE zstd
 )
