@@ -2,13 +2,13 @@
 -- Jam Work load
 -----------------------------------------------------------------------
 create schema IF NOT EXISTS dw_waze;
-DROP TABLE IF  EXISTS dw_waze.stage_jam_{{ batchIdValue }} ;
-CREATE TABLE IF NOT EXISTS dw_waze.stage_jam_{{ batchIdValue }}
+DROP TABLE IF  EXISTS {{ dw_schema_name }}.stage_jam_{{ batchIdValue }} ;
+CREATE TABLE IF NOT EXISTS {{ dw_schema_name }}.stage_jam_{{ batchIdValue }}
 (
   id                    VARCHAR(50) ENCODE zstd,
   jam_uuid              VARCHAR(50) ENCODE zstd,
   jam_type              VARCHAR(10) ENCODE zstd,
-  road_type             VARCHAR(25) ENCODE zstd,
+  road_type             SMALLINT ENCODE zstd,
   street                VARCHAR(200) ENCODE zstd,
   city                  VARCHAR(200) ENCODE zstd,
   state                 VARCHAR(10) ENCODE zstd,
@@ -33,12 +33,12 @@ DISTSTYLE KEY DISTKEY (id) SORTKEY (pub_utc_timestamp);
 --------------------------------------------------------------------
 --Intermediate Jam Table
 --------------------------------------------------------------------
-DROP TABLE IF EXISTS dw_waze.int_jam_{{ batchIdValue }};
-CREATE TABLE IF NOT EXISTS dw_waze.int_jam_{{ batchIdValue }}
+DROP TABLE IF EXISTS {{ dw_schema_name }}.int_jam_{{ batchIdValue }};
+CREATE TABLE IF NOT EXISTS {{ dw_schema_name }}.int_jam_{{ batchIdValue }}
 ( id                    VARCHAR(50) ENCODE zstd,
   jam_uuid              VARCHAR(50) ENCODE zstd,
   jam_type              VARCHAR(10) ENCODE zstd,
-  road_type             VARCHAR(25) ENCODE zstd,
+  road_type             SMALLINT ENCODE zstd,
   street                VARCHAR(200) ENCODE zstd,
   city                  VARCHAR(200) ENCODE zstd,
   state                 VARCHAR(10) ENCODE zstd,
@@ -63,12 +63,12 @@ DISTSTYLE KEY DISTKEY (id) SORTKEY (pub_utc_timestamp);
 --------------------------------------------------------------------
 --Jam Table
 --------------------------------------------------------------------
---DROP TABLE IF EXISTS dw_waze.jam;
-CREATE TABLE IF NOT EXISTS dw_waze.jam
+--DROP TABLE IF EXISTS {{ dw_schema_name }}.jam;
+CREATE TABLE IF NOT EXISTS {{ dw_schema_name }}.jam
 ( id                    VARCHAR(50) ENCODE zstd,
   jam_uuid              VARCHAR(50) ENCODE zstd,
   jam_type              VARCHAR(10) ENCODE zstd,
-  road_type             VARCHAR(25) ENCODE zstd,
+  road_type             SMALLINT ENCODE zstd,
   street                VARCHAR(200) ENCODE zstd,
   city                  VARCHAR(200) ENCODE zstd,
   state                 VARCHAR(10) ENCODE zstd,

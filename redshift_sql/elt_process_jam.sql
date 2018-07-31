@@ -1,11 +1,11 @@
 --------------------------------------------------------------------
 --Update Batch Id
 --------------------------------------------------------------------
-update dw_waze.stage_jam_{{ batchIdValue }}  set etl_run_id={{ batchIdValue }} ;
+update {{ dw_schema_name }}.stage_jam_{{ batchIdValue }}  set elt_run_id={{ batchIdValue }} ;
 -------------------------------------------------
---INT ETL Load
+--INT ELT Load
 -------------------------------------------------
-INSERT INTO dw_waze.int_jam_{{ batchIdValue }}
+INSERT INTO {{ dw_schema_name }}.int_jam_{{ batchIdValue }}
 SELECT dsj.id, 
        dsj.jam_uuid, 
        dsj.jam_type, 
@@ -27,7 +27,7 @@ SELECT dsj.id,
        dsj.pub_utc_timestamp, 
        dsj.pub_utc_epoch_week, 
        dsj.jam_md5 ,
-       dsj.etl_run_id
+       dsj.elt_run_id
 FROM   (SELECT id, 
                jam_uuid, 
                jam_type, 
@@ -49,7 +49,7 @@ FROM   (SELECT id,
                pub_utc_timestamp, 
                pub_utc_epoch_week, 
                jam_md5, 
-               etl_run_id,
+               elt_run_id,
                Row_number() 
                  OVER ( 
                    partition BY jam_md5, id 
@@ -76,7 +76,7 @@ FROM   (SELECT id,
                        pub_utc_epoch_week, 
                        Md5(COALESCE(id, '') 
                            || COALESCE(jam_type, '') 
-                           || COALESCE(road_type, '')
+                           || COALESCE(road_type, 0)
                            || COALESCE(street, '') 
                            || COALESCE(city, '')
                            || COALESCE(state, '') 
@@ -91,9 +91,9 @@ FROM   (SELECT id,
                            || COALESCE(turn_type, '') 
                            || COALESCE(blocking_alert_uuid, '') 
                            || COALESCE(pub_millis, '')) jam_md5,
-                       etl_run_id
-                FROM   dw_waze.stage_jam_{{ batchIdValue }})) dsj 
-       LEFT JOIN dw_waze.jam dj 
+                       elt_run_id
+                FROM   {{ dw_schema_name }}.stage_jam_{{ batchIdValue }})) dsj
+       LEFT JOIN {{ dw_schema_name }}.jam dj
               ON dj.id = dsj.id 
                  AND dsj.jam_md5 = dj.jam_md5 
 WHERE  dj.id IS NULL 
@@ -101,9 +101,9 @@ WHERE  dj.id IS NULL
 
 
 -------------------------------------------------
---TGT ETL Load
+--TGT ELT Load
 -------------------------------------------------
-INSERT INTO dw_waze.jam
+INSERT INTO {{ dw_schema_name }}.jam
 SELECT id, 
        jam_uuid, 
        jam_type, 
@@ -125,6 +125,6 @@ SELECT id,
        pub_utc_timestamp, 
        pub_utc_epoch_week, 
        jam_md5
-FROM  dw_waze.int_jam_{{ batchIdValue }} ;
+FROM  {{ dw_schema_name }}.int_jam_{{ batchIdValue }} ;
 
 commit;

@@ -5,8 +5,8 @@
 ---Create TEMP Stage Alert table DDL
 --------------------------------------------------------------------------------
 create schema IF NOT EXISTS dw_waze;
-DROP TABLE IF EXISTS dw_waze.stage_alert_{{ batchIdValue }};
-CREATE TABLE IF NOT EXISTS dw_waze.stage_alert_{{ batchIdValue }}
+DROP TABLE IF EXISTS {{ dw_schema_name }}.stage_alert_{{ batchIdValue }};
+CREATE TABLE IF NOT EXISTS {{ dw_schema_name }}.stage_alert_{{ batchIdValue }}
 ( alert_uuid           VARCHAR(50) ENCODE zstd,
   alert_type           VARCHAR(25) ENCODE zstd,
   sub_type             VARCHAR(70) ENCODE zstd,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS dw_waze.stage_alert_{{ batchIdValue }}
   pub_millis           VARCHAR(50) ENCODE zstd,
   pub_utc_timestamp    TIMESTAMP WITHOUT TIME ZONE ENCODE delta32k,
   pub_utc_epoch_week   SMALLINT ENCODE zstd,
-  road_type            VARCHAR(25) ENCODE zstd,
+  road_type            SMALLINT ENCODE zstd,
   elt_run_id           VARCHAR(50)
 
 )
@@ -34,8 +34,8 @@ DISTSTYLE KEY DISTKEY (alert_uuid);
 --------------------------------------------------------------------------------
 ---Create TEMP Intermediate Alert table DDL
 --------------------------------------------------------------------------------
-DROP TABLE IF EXISTS dw_waze.int_alert_{{ batchIdValue }};
-CREATE TABLE IF NOT EXISTS dw_waze.int_alert_{{ batchIdValue }}
+DROP TABLE IF EXISTS {{ dw_schema_name }}.int_alert_{{ batchIdValue }};
+CREATE TABLE IF NOT EXISTS {{ dw_schema_name }}.int_alert_{{ batchIdValue }}
 (
   alert_char_crc VARCHAR(10) ENCODE zstd,
   alert_uuid           VARCHAR(50) ENCODE zstd,
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS dw_waze.int_alert_{{ batchIdValue }}
   pub_millis           VARCHAR(50) ENCODE zstd,
   pub_utc_timestamp    TIMESTAMP WITHOUT TIME ZONE ENCODE delta32k,
   pub_utc_epoch_week   SMALLINT ENCODE zstd,
-  road_type            VARCHAR(25) ENCODE zstd,
+  road_type            SMALLINT ENCODE zstd,
   total_occurences    INT ENCODE zstd,
   load_operation       VARCHAR(2) ENCODE zstd,
   current_flag         SMALLINT ENCODE zstd,
@@ -73,16 +73,15 @@ SORTKEY (pub_utc_timestamp);
 ---Create TEMP Revised table
 --------------------------------------------------------------------------------
 
-DROP TABLE IF EXISTS dw_waze.revised_alert_{{ batchIdValue }};
-CREATE TABLE IF NOT EXISTS dw_waze.revised_alert_{{ batchIdValue }}
+DROP TABLE IF EXISTS {{ dw_schema_name }}.revised_alert_{{ batchIdValue }};
+CREATE TABLE IF NOT EXISTS {{ dw_schema_name }}.revised_alert_{{ batchIdValue }}
 (
   alert_char_crc VARCHAR(10) ENCODE zstd,
   alert_uuid           VARCHAR(50) ENCODE zstd,
   uuid_version         SMALLINT ENCODE zstd,
   current_flag         SMALLINT ENCODE zstd,
   elt_run_id           VARCHAR(50) ENCODE zstd,
-  elt_current_flag     SMALLINT ENCODE zstd,
-  total_occurences     SMALLINT ENCODE zstd,
+  total_occurences     INT ENCODE zstd,
   alert_type           VARCHAR(25) ENCODE zstd,
   sub_type             VARCHAR(70) ENCODE zstd,
   street               VARCHAR(100) ENCODE zstd,
@@ -103,7 +102,7 @@ CREATE TABLE IF NOT EXISTS dw_waze.revised_alert_{{ batchIdValue }}
   pub_millis           VARCHAR(50) ENCODE zstd,
   pub_utc_timestamp    TIMESTAMP WITHOUT TIME ZONE ENCODE delta32k,
   pub_utc_epoch_week   SMALLINT ENCODE zstd,
-  road_type            VARCHAR(25) ENCODE zstd
+  road_type            SMALLINT ENCODE zstd
 
 )
 DISTSTYLE KEY DISTKEY (alert_uuid)
@@ -112,15 +111,15 @@ SORTKEY (pub_utc_timestamp) ;
 --------------------------------------------------------------------------------
 ---Alert table DDL
 --------------------------------------------------------------------------------
---DROP TABLE dw_waze.alert;
-CREATE TABLE IF NOT EXISTS dw_waze.alert
+--DROP TABLE {{ dw_schema_name }}.alert;
+CREATE TABLE IF NOT EXISTS {{ dw_schema_name }}.alert
 (
   alert_char_crc VARCHAR(10) ENCODE zstd,
   alert_uuid           VARCHAR(50) ENCODE zstd,
   uuid_version         SMALLINT ENCODE zstd,
   current_flag         SMALLINT ENCODE zstd,
   elt_run_id           VARCHAR(50) ENCODE zstd,
-  total_occurences         SMALLINT ENCODE zstd,
+  total_occurences     INT ENCODE zstd,
   alert_type           VARCHAR(25) ENCODE zstd,
   sub_type             VARCHAR(70) ENCODE zstd,
   street               VARCHAR(100) ENCODE zstd,
@@ -141,9 +140,9 @@ CREATE TABLE IF NOT EXISTS dw_waze.alert
   pub_millis           VARCHAR(50) ENCODE zstd,
   pub_utc_timestamp    TIMESTAMP WITHOUT TIME ZONE ENCODE delta32k,
   pub_utc_epoch_week   SMALLINT ENCODE zstd,
-  road_type            VARCHAR(25) ENCODE zstd
+  road_type            SMALLINT ENCODE zstd
 )
 DISTSTYLE KEY DISTKEY (alert_uuid)
 SORTKEY (pub_utc_timestamp) ;
-analyze dw_waze.alert;
+analyze {{ dw_schema_name }}.alert;
 COMMIT;
