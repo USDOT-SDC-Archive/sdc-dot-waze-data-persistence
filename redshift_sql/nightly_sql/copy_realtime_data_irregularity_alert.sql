@@ -1,4 +1,4 @@
-COPY {{ dw_schema_name }}.stage_alert_{{ batchIdValue }}
+COPY {{ dw_schema_name }}.stage_irregularity_alert_nightly
 FROM 's3://{{ curated_bucket_name }}/{{ manifest_curated_key }}'
 IAM_ROLE '{{ redshift_role_arn }}'
 REGION '{{ region_name }}'

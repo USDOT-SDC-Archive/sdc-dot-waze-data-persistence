@@ -88,3 +88,5 @@ CREATE TABLE IF NOT EXISTS {{ dw_schema_name }}.jam
   jam_md5               VARCHAR(100) ENCODE zstd
 )
 DISTSTYLE KEY DISTKEY (id) SORTKEY (pub_utc_timestamp);
+
+commit;

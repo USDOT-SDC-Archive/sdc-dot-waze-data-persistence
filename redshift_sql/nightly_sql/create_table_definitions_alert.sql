@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS {{ dw_schema_name }}.int_alert_{{ batchIdValue }}
 (
   alert_char_crc VARCHAR(10) ENCODE zstd,
   alert_uuid           VARCHAR(50) ENCODE zstd,
-  uuid_version         SMALLINT ENCODE zstd,
+  uuid_version         INT ENCODE zstd,
   elt_run_id           VARCHAR(50) ENCODE zstd,
   alert_type           VARCHAR(25) ENCODE zstd,
   sub_type             VARCHAR(70) ENCODE zstd,
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS {{ dw_schema_name }}.revised_alert_{{ batchIdValue }}
 (
   alert_char_crc VARCHAR(10) ENCODE zstd,
   alert_uuid           VARCHAR(50) ENCODE zstd,
-  uuid_version         SMALLINT ENCODE zstd,
+  uuid_version         INT ENCODE zstd,
   current_flag         SMALLINT ENCODE zstd,
   elt_run_id           VARCHAR(50) ENCODE zstd,
   total_occurences     INT ENCODE zstd,
@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS {{ dw_schema_name }}.alert
 (
   alert_char_crc VARCHAR(10) ENCODE zstd,
   alert_uuid           VARCHAR(50) ENCODE zstd,
-  uuid_version         SMALLINT ENCODE zstd,
+  uuid_version         INT ENCODE zstd,
   current_flag         SMALLINT ENCODE zstd,
   elt_run_id           VARCHAR(50) ENCODE zstd,
   total_occurences     INT ENCODE zstd,
@@ -144,5 +144,5 @@ CREATE TABLE IF NOT EXISTS {{ dw_schema_name }}.alert
 )
 DISTSTYLE KEY DISTKEY (alert_uuid)
 SORTKEY (pub_utc_timestamp) ;
-analyze {{ dw_schema_name }}.alert;
+--analyze {{ dw_schema_name }}.alert;
 COMMIT;
