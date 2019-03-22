@@ -17,7 +17,7 @@ s3Resource = boto3.resource('s3')
 if not os.path.exists(REDSHIFT_SQL_DIR):
     os.mkdir(REDSHIFT_SQL_DIR)
 
-def __persist_records_to_redshift(manifest_s3key_name, table_name, sql_file_name, batch_id):
+def __persist_records_to_redshift(manifest_s3key_name, table_name, sql_file_name, batch_id, is_historical):
     try:
         LoggerUtility.logInfo("Started persistence for table_name - {}".format(table_name))
         curated_bucket = os.environ['CURATED_BUCKET_NAME']
@@ -28,10 +28,19 @@ def __persist_records_to_redshift(manifest_s3key_name, table_name, sql_file_name
         s3Resource.Bucket(CONFIG_BUCKET).download_file(SQL_KEY_PREFIX + "/" + sql_file_name,
                                                     REDSHIFT_SQL_DIR + "/" + query_file_temp_name)
         LoggerUtility.logInfo("Downloaded file from S3 - {}".format(query_file_temp_name))
+        dw_schema_name = "dw_waze"
+        elt_schema_name = "elt_waze"
+
+        if(is_historical):
+            dw_schema_name = "dw_waze_history"
+            elt_schema_name = "elt_waze_history"
+
         redshift_manager.execute_from_file(query_file_temp_name,
                                                    curated_bucket_name=curated_bucket,
                                                    manifest_curated_key=manifest_s3key_name,
-                                                   batchIdValue=batch_id)
+                                                   batchIdValue=batch_id,
+                                                   dw_schema_name=dw_schema_name,
+                                                   elt_schema_name=elt_schema_name)
         # delete the file once executed
         os.remove(REDSHIFT_SQL_DIR + "/" + query_file_temp_name)
     except Exception as e:
@@ -62,5 +71,6 @@ def persist_curated_datasets(event, context, batch_id):
     tableName=event["tablename"]
     maifestUrlParameter=tableName+"url"
     manifestURl=event[maifestUrlParameter]
+    is_historical = event["is_historical"] == 'true'
     sql_file_name=FUNCTION_LOGIC+"_"+tableName+".sql"
-    __persist_records_to_redshift(manifestURl,tableName,sql_file_name, batch_id)
+    __persist_records_to_redshift(manifestURl,tableName,sql_file_name, batch_id, is_historical)

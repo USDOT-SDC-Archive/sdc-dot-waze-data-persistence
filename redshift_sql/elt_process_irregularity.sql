@@ -1,12 +1,12 @@
 --------------------------------------------------------------------
 --Update Batch Id
 --------------------------------------------------------------------
-update dw_waze.stage_irregularity_{{ batchIdValue }}  set elt_run_id={{ batchIdValue }} ;
+update {{ dw_schema_name }}.stage_irregularity_{{ batchIdValue }}  set elt_run_id={{ batchIdValue }} ;
 -------------------------------------------------------
---INT ETL Load
+--INT ELT Load
 -------------------------------------------------------
 
-INSERT INTO dw_waze.int_irregularity_{{ batchIdValue }}
+INSERT INTO {{ dw_schema_name }}.int_irregularity_{{ batchIdValue }}
 SELECT dsi.id, 
        dsi.irregularity_type, 
        dsi.street, 
@@ -129,18 +129,18 @@ FROM   (SELECT id,
                            || COALESCE(update_date, '') 
                            || COALESCE(update_millis, '')) AS irregularity_md5, 
                        elt_run_id 
-                FROM   dw_waze.stage_irregularity_{{ batchIdValue }} dsi)) dsi 
-       LEFT JOIN dw_waze.irregularity di 
+                FROM   {{ dw_schema_name }}.stage_irregularity_{{ batchIdValue }} dsi)) dsi
+       LEFT JOIN {{ dw_schema_name }}.irregularity di
               ON dsi.id = di.id 
                  AND dsi.irregularity_md5 = di.irregularity_md5 
 WHERE  di.id IS NULL 
        AND dsi.row_num = 1 ;
 
 -------------------------------------------------------
---TGT ETL Load
+--TGT ELT Load
 -------------------------------------------------------
 
-INSERT INTO dw_waze.irregularity
+INSERT INTO {{ dw_schema_name }}.irregularity
 SELECT dsi.id, 
        dsi.irregularity_type, 
        dsi.street, 
@@ -171,6 +171,6 @@ SELECT dsi.id,
        dsi.update_utc_timestamp, 
        dsi.update_utc_epoch_week, 
        dsi.irregularity_md5
-FROM   dw_waze.int_irregularity_{{ batchIdValue }};
+FROM   {{ dw_schema_name }}.int_irregularity_{{ batchIdValue }} dsi;
 
 commit;

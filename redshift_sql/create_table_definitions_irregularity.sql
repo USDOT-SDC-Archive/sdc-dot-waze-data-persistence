@@ -1,8 +1,8 @@
 ---------------------------------------------------------------------
 --Stage irregularity table DDL
 ---------------------------------------------------------------------
-DROP TABLE IF EXISTS dw_waze.stage_irregularity_{{ batchIdValue }} ;
-CREATE TABLE IF NOT EXISTS dw_waze.stage_irregularity_{{ batchIdValue }}
+DROP TABLE IF EXISTS {{ dw_schema_name }}.stage_irregularity_{{ batchIdValue }} ;
+CREATE TABLE IF NOT EXISTS {{ dw_schema_name }}.stage_irregularity_{{ batchIdValue }}
 (
   id                         VARCHAR(50) ENCODE zstd,
   irregularity_type          VARCHAR(25) ENCODE zstd,
@@ -41,8 +41,8 @@ DISTSTYLE KEY DISTKEY (id) SORTKEY (detection_utc_timestamp);
 ---------------------------------------------------------------------
 --Stage irregularity table DDL
 ---------------------------------------------------------------------
-DROP TABLE IF EXISTS dw_waze.int_irregularity_{{ batchIdValue }} ;
-CREATE TABLE IF NOT EXISTS dw_waze.int_irregularity_{{ batchIdValue }}
+DROP TABLE IF EXISTS {{ dw_schema_name }}.int_irregularity_{{ batchIdValue }} ;
+CREATE TABLE IF NOT EXISTS {{ dw_schema_name }}.int_irregularity_{{ batchIdValue }}
 (
   id                         VARCHAR(50) ENCODE zstd,
   irregularity_type          VARCHAR(25) ENCODE zstd,
@@ -82,7 +82,7 @@ DISTSTYLE KEY DISTKEY (id) SORTKEY (detection_utc_timestamp);
 ---------------------------------------------------------------------
 --TGT irregularity
 ---------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS dw_waze.irregularity
+CREATE TABLE IF NOT EXISTS {{ dw_schema_name }}.irregularity
 (
   id                         VARCHAR(50) ENCODE zstd,
   irregularity_type          VARCHAR(25) ENCODE zstd,

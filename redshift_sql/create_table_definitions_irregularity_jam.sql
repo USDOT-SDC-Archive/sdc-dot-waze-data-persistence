@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS dw_waze.stage_irregularity_jam_{{ batchIdValue }} ;
-CREATE TABLE IF NOT EXISTS dw_waze.stage_irregularity_jam_{{ batchIdValue }} 
+DROP TABLE IF EXISTS {{ dw_schema_name }}.stage_irregularity_jam_{{ batchIdValue }} ;
+CREATE TABLE IF NOT EXISTS {{ dw_schema_name }}.stage_irregularity_jam_{{ batchIdValue }}
 (
 	irregularity_id VARCHAR(50)   ENCODE zstd
 	,jam_uuid VARCHAR(50)   ENCODE zstd
@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS dw_waze.stage_irregularity_jam_{{ batchIdValue }}
 DISTSTYLE ALL
 ;
 
-DROP TABLE IF EXISTS dw_waze.int_irregularity_jam_{{ batchIdValue }} ;
-CREATE TABLE IF NOT EXISTS dw_waze.int_irregularity_jam_{{ batchIdValue }} 
+DROP TABLE IF EXISTS {{ dw_schema_name }}.int_irregularity_jam_{{ batchIdValue }} ;
+CREATE TABLE IF NOT EXISTS {{ dw_schema_name }}.int_irregularity_jam_{{ batchIdValue }}
 (
 	irregularity_id VARCHAR(50)   ENCODE zstd
 	,jam_uuid VARCHAR(50)   ENCODE zstd
@@ -18,8 +18,8 @@ CREATE TABLE IF NOT EXISTS dw_waze.int_irregularity_jam_{{ batchIdValue }}
 DISTSTYLE ALL
 ;
 
---DROP TABLE IF EXISTS dw_waze.irregularity_jam;
-CREATE TABLE IF NOT EXISTS dw_waze.irregularity_jam
+--DROP TABLE IF EXISTS {{ dw_schema_name }}.irregularity_jam;
+CREATE TABLE IF NOT EXISTS {{ dw_schema_name }}.irregularity_jam
 (
 	irregularity_id VARCHAR(50)   ENCODE zstd
 	,jam_uuid VARCHAR(50)   ENCODE zstd
