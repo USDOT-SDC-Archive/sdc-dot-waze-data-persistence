@@ -12,5 +12,4 @@ addons:
         token:
              secure: "HmHjZ2jAEMfmLjH3WIxQDY4tfOKEjtKHxEYirdGEDaonLYWkPTzsEyr4xmGg96lGlZB+8S//dlo5tcos+hLuZxEZ8otjOIYfTGiTIgkTPjfpdSL/mg7OocvcPNvAa0osdITYunOGaGFaoj9+nJW7sptmDProchL+DVU+rWJKKicjTcddT0gStdsMRRQeoRAFXtagXTbr6zwbkqZvezrSyBJFT6GIPt2I9k4LyGXLcw3k/aX9SfGK9gfm036+SP0LIHanlumel3pEWj18lfGWO7hUE2lLn6uKkJZfUmrDYnzEXgosSvKRAQkpVoujhGYUgsBW6mwXkm7zNYywnfbd4VTwpWVaAc4Rdb5j3RU44SkeAxF4LVzuFZNomxINZnnhSRhn9xZ+DPEL6T7tT/U/SH+ygMC4W8aUzUj95i1bmFonL/qAzcVx4UcwVu9nlZYoIHkA8Mq7DBC80BRhf9LPV2G3CZfAt/z2ynfD4asMIIR4OX6V1Ct2vmGSGOF2QbH/PkSXTfj/paZc11QpSc1CRhKMDtsYUj9Fw5nB1OXLBGkxNOuw5cXJh85nlWyfHvPBw3PBFCLN72RbwFPY4T3mboIaS9MV/BIEG+YHy/jZCmqaE+J5hyfDdT4ey3X1ThXmh19urL1vb4+d7eMXMOatTp/8BKQpHLBOSQjwkqUQLiM="
 script: 
-    - python persist_curated_dataset_handler_main.py
     - sonar-scanner
