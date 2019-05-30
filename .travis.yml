@@ -10,5 +10,4 @@ branches:
     only:
         - master
         - develop
-script: 
-    - sonar-scanner
+script:
