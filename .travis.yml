@@ -11,4 +11,4 @@ branches:
         - master
         - develop
 script:
-     -sonar-scanner
+     - sonar-scanner
