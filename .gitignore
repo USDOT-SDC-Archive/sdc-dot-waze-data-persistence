@@ -4,3 +4,7 @@
 **/**.pyc
 .idea/
 .vscode/
+venv/**
+.coverage
+html_coverage_reports/**
+html
