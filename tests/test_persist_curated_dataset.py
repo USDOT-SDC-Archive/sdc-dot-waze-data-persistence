@@ -17,6 +17,11 @@ batch_id = "batch_id"
 
 
 def Any(cls):
+    """
+    Checks if a parameter is any of a particular data type.
+    :param cls:
+    :return:
+    """
     class Any(cls):
         def __eq__(self, other):
             return True
@@ -24,6 +29,11 @@ def Any(cls):
 
 
 def test__make_redshift_manager(monkeypatch):
+    """
+    Tests that the redshift manager is instantiated correctly.
+    :param monkeypatch:
+    :return:
+    """
     os.environ['REDSHIFT_MASTER_PASSWORD'] = "super secret"
     os.environ['REDSHIFT_MASTER_USERNAME'] = "tester"
     os.environ['REDSHIFT_JDBC_URL'] = "www.url.com"
@@ -79,6 +89,10 @@ def test__make_redshift_manager(monkeypatch):
 
 
 def test__persist_records_to_redshift_historical():
+    """
+
+    :return:
+    """
 
     is_historical = True
 
