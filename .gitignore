@@ -1,0 +1,10 @@
+.DS_Store
+**/__pycache__/**
+**.pyc
+**/**.pyc
+.idea/
+.vscode/
+venv/**
+.coverage
+html_coverage_reports/**
+html

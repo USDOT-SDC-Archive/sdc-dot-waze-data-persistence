@@ -1,18 +1,18 @@
 --------------------------------------------------------------------
 --Update Batch Id
 --------------------------------------------------------------------
-update dw_waze.stage_irregularity_point_sequence_{{ batchIdValue }}  set elt_run_id={{ batchIdValue }} ;
+update {{ dw_schema_name }}.stage_irregularity_point_sequence_{{ batchIdValue }}  set elt_run_id={{ batchIdValue }} ;
 ----------------------------------------
---ETL Load
+--ELT Load
 ----------------------------------------
-INSERT INTO dw_waze.int_irregularity_point_sequence_{{ batchIdValue }} 
+INSERT INTO {{ dw_schema_name }}.int_irregularity_point_sequence_{{ batchIdValue }}
 SELECT sips.irregularity_id,
        sips.location_x,
        sips.location_y,
        sips.sequence_order,
        sips.elt_run_id
-FROM dw_waze.stage_irregularity_point_sequence_{{ batchIdValue }} sips
-  LEFT JOIN dw_waze.irregularity_point_sequence ips
+FROM {{ dw_schema_name }}.stage_irregularity_point_sequence_{{ batchIdValue }} sips
+  LEFT JOIN {{ dw_schema_name }}.irregularity_point_sequence ips
          ON sips.irregularity_id = ips.irregularity_id
         AND sips.location_x = ips.location_x
         AND sips.location_y = ips.location_y
@@ -25,11 +25,11 @@ GROUP BY sips.irregularity_id,
        sips.elt_run_id;
 
 
-INSERT INTO dw_waze.irregularity_point_sequence 
+INSERT INTO {{ dw_schema_name }}.irregularity_point_sequence
 SELECT sips.irregularity_id,
        sips.location_x,
        sips.location_y,
        sips.sequence_order
-FROM dw_waze.int_irregularity_point_sequence_{{ batchIdValue }} sips;
+FROM {{ dw_schema_name }}.int_irregularity_point_sequence_{{ batchIdValue }} sips;
 
 commit;

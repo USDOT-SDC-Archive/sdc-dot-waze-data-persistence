@@ -1,13 +1,13 @@
 --------------------------------------------------------------------
 --Update Batch Id
 --------------------------------------------------------------------
-update dw_waze.stage_alert_{{ batchIdValue }}  set elt_run_id={{ batchIdValue }} /* Batch ID to be replaced programatically*/;
+update {{ dw_schema_name }}.stage_alert_{{ batchIdValue }}  set elt_run_id={{ batchIdValue }} /* Batch ID to be replaced programatically*/;
 
 -------------------------------------------------------------------------------
-analyze dw_waze.stage_alert_{{ batchIdValue }};
-analyze dw_waze.alert;
+analyze {{ dw_schema_name }}.stage_alert_{{ batchIdValue }};
+analyze {{ dw_schema_name }}.alert;
 -------------------------------------------------------------------------------
-INSERT INTO dw_waze.int_alert_{{ batchIdValue }}
+INSERT INTO {{ dw_schema_name }}.int_alert_{{ batchIdValue }}
 WITH stg_trnsform 
      AS (SELECT st.*, 
                 cnt.total_counts 
@@ -25,9 +25,9 @@ WITH stg_trnsform
                               || tfi.pub_utc_timestamp 
                               || Coalesce(tfi.state, '') 
                               ||Coalesce(tfi.report_description, '') 
-                              ||Coalesce(tfi.road_type, '') 
+                              ||Coalesce(tfi.road_type, 0)
                               ||Coalesce(tfi.city, '') 
-                              ||Coalesce(tfi.road_type, '') 
+                              ||Coalesce(tfi.road_type, 0)
                               ||Coalesce(tfi.magvar, '') 
                               ||Coalesce(tfi.sub_type, '') 
                               ||Coalesce(tfi.street, '') 
@@ -159,8 +159,8 @@ WITH stg_trnsform
                                    over ( 
                                      PARTITION BY tfi.alert_uuid), 0) 
                         max_uuid_version 
-                 FROM   dw_waze.stage_alert_{{ batchIdValue }} tfi 
-                        left join dw_waze.alert dwai 
+                 FROM   {{ dw_schema_name }}.stage_alert_{{ batchIdValue }} tfi
+                        left join {{ dw_schema_name }}.alert dwai
                                ON dwai.alert_uuid = tfi.alert_uuid) st 
                 join (SELECT alert_uuid, 
                              alert_char_crc, 
@@ -178,15 +178,15 @@ WITH stg_trnsform
                                            || tfi.pub_utc_timestamp 
                                            || Coalesce(tfi.state, '') 
 ||Coalesce(tfi.report_description, '') 
-||Coalesce(tfi.road_type, '') 
+||Coalesce(tfi.road_type, 0)
 ||Coalesce(tfi.city, '') 
-||Coalesce(tfi.road_type, '') 
+||Coalesce(tfi.road_type, 0)
 ||Coalesce(tfi.magvar, '') 
 ||Coalesce(tfi.sub_type, '') 
 ||Coalesce(tfi.street, '') 
 ||Coalesce(tfi.jam_uuid, '')) 
 alert_char_crc 
-FROM   dw_waze.stage_alert_{{ batchIdValue }} tfi) 
+FROM   {{ dw_schema_name }}.stage_alert_{{ batchIdValue }} tfi)
 GROUP  BY alert_uuid, 
 alert_char_crc) cnt 
 ON cnt.alert_uuid = st.alert_uuid 
@@ -218,10 +218,10 @@ AND cnt.alert_char_crc = st.alert_char_crc),
                     row_num, 
                 stg_trnsform.* 
          FROM   stg_trnsform 
-                left join dw_waze.alert fa 
+                left join {{ dw_schema_name }}.alert fa
                        ON stg_trnsform.alert_uuid = fa.alert_uuid 
                           AND stg_trnsform.alert_char_crc = fa.alert_char_crc 
-                left join elt_waze.elt_run_stats ers 
+                left join {{ elt_schema_name }}.elt_run_stats ers
                        ON ers.elt_run_id = stg_trnsform.elt_run_id 
                           AND ers.table_id = 1001 
          WHERE  fa.alert_uuid IS NULL) 
@@ -266,22 +266,22 @@ SELECT tf.alert_char_crc,
        current_flag, 
        tf.revision_flag 
 FROM   transformed tf 
-       left join elt_waze.elt_run_stats ers 
+       left join {{ elt_schema_name }}.elt_run_stats ers
               ON ers.elt_run_id = tf.elt_run_id 
                  AND ers.table_id = 1001 
 WHERE  row_num = 1 ;
 
 ------------------------------------------------------------------------------------------------------
--- Update ETL current flag if there is new identical record of the alert comming in a different batch
+-- Update ELT current flag if there is new identical record of the alert comming in a different batch
 ------------------------------------------------------------------------------------------------------
 
-/*UPDATE dw_waze.alert
+/*UPDATE {{ dw_schema_name }}.alert
    SET elt_current_flag = 0
-FROM dw_waze.int_alert_{{ batchIdValue }} ifa
-WHERE dw_waze.alert.alert_uuid = ifa.alert_uuid
-AND   dw_waze.alert.alert_char_crc = ifa.alert_char_crc
-AND   dw_waze.alert.uuid_version = ifa.uuid_version
-AND   dw_waze.alert.elt_run_id <> ifa.elt_run_id
+FROM {{ dw_schema_name }}.int_alert_{{ batchIdValue }} ifa
+WHERE {{ dw_schema_name }}.alert.alert_uuid = ifa.alert_uuid
+AND   {{ dw_schema_name }}.alert.alert_char_crc = ifa.alert_char_crc
+AND   {{ dw_schema_name }}.alert.uuid_version = ifa.uuid_version
+AND   {{ dw_schema_name }}.alert.elt_run_id <> ifa.elt_run_id
 AND (revision_flag=0 or load_operation ilike 'u');
 commit;*/
 
@@ -289,19 +289,19 @@ commit;*/
 --Update current_flags if there is a new version of Alert
 -----------------------------------------------------------------------------------------------------
 
-UPDATE dw_waze.alert 
+UPDATE {{ dw_schema_name }}.alert
    SET current_flag = 0 from (SELECT MIN(uuid_version) min_version,
                                      alert_uuid
-                              FROM dw_waze.int_alert_{{ batchIdValue }} 
+                              FROM {{ dw_schema_name }}.int_alert_{{ batchIdValue }}
                               where load_operation='I'
                               and revision_flag=0
-                              GROUP BY alert_uuid) ifa WHERE dw_waze.alert.alert_uuid = ifa.alert_uuid
-AND dw_waze.alert.uuid_version = ifa.min_version-1;
+                              GROUP BY alert_uuid) ifa WHERE {{ dw_schema_name }}.alert.alert_uuid = ifa.alert_uuid
+AND {{ dw_schema_name }}.alert.uuid_version = ifa.min_version-1;
 
 -----------------------------------------------------------------------------------------------------
 --Temporarily stage revisions in revised_alert table
 -----------------------------------------------------------------------------------------------------
-INSERT INTO dw_waze.revised_alert_{{ batchIdValue }}
+INSERT INTO {{ dw_schema_name }}.revised_alert_{{ batchIdValue }}
 select alert_char_crc,
        alert_uuid,
         uuid_version,
@@ -388,10 +388,10 @@ FROM (SELECT dwa.alert_char_crc,
              'l' load_operation,
              'tgt' t_type
       FROM (SELECT alert_uuid
-            FROM dw_waze.int_alert_{{ batchIdValue }}
+            FROM {{ dw_schema_name }}.int_alert_{{ batchIdValue }}
             WHERE revision_flag = 1
             GROUP BY alert_uuid) rvs
-        JOIN dw_waze.alert dwa ON rvs.alert_uuid = dwa.alert_uuid
+        JOIN {{ dw_schema_name }}.alert dwa ON rvs.alert_uuid = dwa.alert_uuid
       UNION ALL
       SELECT alert_char_crc,
              alert_uuid,
@@ -422,7 +422,7 @@ FROM (SELECT dwa.alert_char_crc,
              road_type,
              load_operation,
              'int' t_type
-      FROM dw_waze.int_alert_{{ batchIdValue }}
+      FROM {{ dw_schema_name }}.int_alert_{{ batchIdValue }}
       WHERE revision_flag = 1)rvs) ;
 
 
@@ -430,20 +430,19 @@ FROM (SELECT dwa.alert_char_crc,
 ---------------------------------------------------------------------------
 -- Delete Revised Rows on the Target table (alert)
 ---------------------------------------------------------------------------
-delete from dw_waze.alert
-using (select alert_uuid from dw_waze.revised_alert_{{ batchIdValue }} group by alert_uuid) rva
-where rva.alert_uuid=dw_waze.alert.alert_uuid;
+delete from {{ dw_schema_name }}.alert
+using (select alert_uuid from {{ dw_schema_name }}.revised_alert_{{ batchIdValue }} group by alert_uuid) rva
+where rva.alert_uuid={{ dw_schema_name }}.alert.alert_uuid;
 
 ---------------------------------------------------------------------------
 --Load Revised data to target alert table
 ---------------------------------------------------------------------------
-INSERT INTO dw_waze.alert
+INSERT INTO {{ dw_schema_name }}.alert
 SELECT alert_char_crc,
              alert_uuid,
              uuid_version,
              current_flag,
              elt_run_id,
-             elt_current_flag,
              total_occurences,
              alert_type,
              sub_type,
@@ -465,12 +464,12 @@ SELECT alert_char_crc,
              pub_millis,
              pub_utc_timestamp,
              pub_utc_epoch_week,
-             road_type from dw_waze.revised_alert_{{ batchIdValue }} order by pub_utc_timestamp;
+             road_type from {{ dw_schema_name }}.revised_alert_{{ batchIdValue }} order by pub_utc_timestamp;
 
 ---------------------------------------------------------------------------------------------
 --Load transformed from Intermediate table to alert table
 ---------------------------------------------------------------------------------------------
-INSERT INTO dw_waze.alert
+INSERT INTO {{ dw_schema_name }}.alert
 SELECT alert_char_crc,
        alert_uuid,
        uuid_version,
@@ -498,7 +497,7 @@ SELECT alert_char_crc,
        pub_utc_timestamp,
        pub_utc_epoch_week,
        road_type
-FROM dw_waze.int_alert_{{ batchIdValue }}
+FROM {{ dw_schema_name }}.int_alert_{{ batchIdValue }}
 WHERE load_operation IN ('I')
 AND   revision_flag = 0
 ;
