@@ -29,7 +29,7 @@ def __persist_records_to_redshift(manifest_s3key_name, table_name, sql_file_name
     """
     try:
 
-        s3_resource = boto3.resource('s3')  # region_name='us-east-1'
+        s3_resource = boto3.resource('s3')
         LoggerUtility.log_info("Started persistence for table_name - {}".format(table_name))
         curated_bucket = os.environ['CURATED_BUCKET_NAME']
         LoggerUtility.log_info("Manifest s3 key = {}".format(manifest_s3key_name))
