@@ -5,7 +5,6 @@ os.environ['CONFIG_BUCKET'] = 'CONFIG_BUCKET'
 os.environ['SQL_KEY_PREFIX'] = 'SQL_KEY_PREFIX'
 os.environ['CURATED_BUCKET_NAME'] = "curated_bucket_name"
 
-import pytest
 import boto3
 from lambdas import persist_curated_dataset_lambda_handler
 from unittest import mock
@@ -16,15 +15,11 @@ sql_file_name = "sql_file_name"
 batch_id = "batch_id"
 
 
-def Any(cls):
-    """
-    Checks if a parameter is any of a particular data type.
-    :param cls:
-    :return:
-    """
+def any_type(cls):
     class Any(cls):
         def __eq__(self, other):
             return True
+
     return Any()
 
 
@@ -53,7 +48,6 @@ def test__make_redshift_manager(monkeypatch):
     class MockRedshiftConnection:
 
         def __init__(self, user, password, redshift_jdbc_url):
-
             self.user = user
             self.password = password
             self.redshift_jdbc_url = redshift_jdbc_url
@@ -61,7 +55,6 @@ def test__make_redshift_manager(monkeypatch):
     class MockRedshiftManager:
 
         def __init__(self, region_name, redshift_role_arn, redshift_connection, query_loader):
-
             self.region_name = region_name
             self.redshift_role_arn = redshift_role_arn
             self.redshift_connection = redshift_connection
@@ -105,7 +98,7 @@ def test__persist_records_to_redshift_historical():
         manifest_s3key_name, table_name, sql_file_name, batch_id, is_historical)
 
     persist_curated_dataset_lambda_handler.__make_redshift_manager().execute_from_file.assert_called_once_with(
-        Any(str),
+        any_type(str),
         batchIdValue='batch_id',
         curated_bucket_name='curated_bucket_name',
         dw_schema_name='dw_waze_history',
@@ -115,7 +108,6 @@ def test__persist_records_to_redshift_historical():
 
 
 def test__persist_records_to_redshift_not_historical():
-
     is_historical = False
 
     boto3.resource = mock.MagicMock()
@@ -127,7 +119,7 @@ def test__persist_records_to_redshift_not_historical():
         manifest_s3key_name, table_name, sql_file_name, batch_id, is_historical)
 
     persist_curated_dataset_lambda_handler.__make_redshift_manager().execute_from_file.assert_called_once_with(
-        Any(str),
+        any_type(str),
         batchIdValue='batch_id',
         curated_bucket_name='curated_bucket_name',
         dw_schema_name='dw_waze',
@@ -137,7 +129,6 @@ def test__persist_records_to_redshift_not_historical():
 
 
 def test_persist_curated_datasets():
-
     event = {
         "tablename": "tablename",
         "is_historical": "true",
@@ -146,7 +137,7 @@ def test_persist_curated_datasets():
 
     persist_curated_dataset_lambda_handler.__persist_records_to_redshift = mock.MagicMock()
 
-    persist_curated_dataset_lambda_handler.persist_curated_datasets(event, None, batch_id)
+    persist_curated_dataset_lambda_handler.persist_curated_datasets(event, batch_id)
 
     persist_curated_dataset_lambda_handler.__persist_records_to_redshift.assert_called_with(
         "tablenameurl", "tablename", "FUNCTION_LOGIC_tablename.sql", batch_id, True
