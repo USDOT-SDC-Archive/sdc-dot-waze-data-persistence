@@ -60,7 +60,6 @@ def test__make_redshift_manager(monkeypatch):
             self.redshift_connection = redshift_connection
             self.query_loader = query_loader
 
-    # try overloading TemplateLoader init with monkeypatch and see what happens
     def mock_template_loader(*args, **kwargs):
         return
 
@@ -82,11 +81,6 @@ def test__make_redshift_manager(monkeypatch):
 
 
 def test__persist_records_to_redshift_historical():
-    """
-
-    :return:
-    """
-
     is_historical = True
 
     boto3.resource = mock.MagicMock()
